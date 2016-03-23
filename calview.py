@@ -1,10 +1,12 @@
-import ui
+import calendar
 import datetime as dt
+import ui
 
 class CalendarView(object):
 
 	def __init__(self,fldname,dateval,action=None):
-		self.days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+		calendar.setfirstweekday(calendar.SUNDAY)
+		self.days = calendar.weekheader(3).split()
 		self.width,self.height = ui.get_screen_size()
 		cv = ui.View(name=fldname)
 		cv.frame = (0,95,self.width,255)
@@ -38,30 +40,21 @@ class CalendarView(object):
 		self.draw_calendar()
 
 	def create_buttons(self):
-		for i in range(0,49):
-			if i<7:
-				daytitle = self.days[i]
-			else:
-				daytitle = ''
+		for i in range(49):
+			daytitle = self.days[i] if i<7 else ''
 			button = ui.Button(name='day'+str(i),title=daytitle)
 			if i>=7:
 				button.action = self.button_pressed
 			button.frame = (5+(i%7)*51,31+(i/7)*31,50,30)
 			button.border_color = '#dadada'
 			button.border_width = 1
-			if i%7 == 0:
-				button.background_color = '#fff5f5'
-			else:
-				button.background_color = 'white'
+			button.background_color = 'white' if i%7 else '#fff5f5'
 			self.view.add_subview(button)			
 
 	def draw_calendar(self):
 		self.lastdate = self.last_day_of_month(self.firstdate)
 		self.firstweekday = self.firstdate.weekday()
-		if self.firstweekday==6:
-			self.firstweekday = 0 
-		else:
-			self.firstweekday = self.firstweekday+1
+		self.firstweekday = (self.firstweekday + 1) % 7
 		last_day = self.lastdate.day
 		self.view['caltitle'].text = str(self.firstdate.strftime('%B  %Y'))
 		for i in range(7,49):
@@ -80,7 +73,7 @@ class CalendarView(object):
 
 	def button_pressed(self,sender):
 		self.caldate = dt.date(self.firstdate.year,self.firstdate.month,int(sender.title))
-		if not (self.action is None):
+		if self.action:
 			(self.action)(self)
 
 	def prev_pressed(self,sender):
@@ -113,5 +106,3 @@ def calendar_action(sender):
 if __name__ == '__main__':
 	vw = CalendarView('Calendar',dt.datetime.today(),calendar_action)
 	vw.view.present('default')
-
-
